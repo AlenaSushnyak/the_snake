@@ -1,9 +1,10 @@
 from random import choice, randint
+from typing import List, Optional, Tuple
 
 import pygame as pg
 
-POINTER = tuple[int, int]
-COLOR = tuple[int, int, int]
+POINTER = Tuple[int, int]
+COLOR = Tuple[int, int, int]
 
 SCREEN_WIDTH: int = 640
 SCREEN_HEIGHT: int = 480
@@ -44,8 +45,8 @@ class GameObject:
         self.body_color: COLOR = body_color
 
     def draw(self):
-        """Метод отрисовки объекта (определяется в подклассах)."""
-        pass
+        """Абстрактный метод отрисовки объекта."""
+        raise NotImplementedError("Subclasses should implement this method")
 
 
 class Apple(GameObject):
@@ -54,13 +55,11 @@ class Apple(GameObject):
     игровом поле и имеет красный цвет.
     """
 
-    def __init__(self, occupied_positions,
+    def __init__(self, occupied_positions: List[POINTER],
                  body_color: COLOR = APPLE_COLOR) -> None:
         """Инициализирует яблоко: задаёт цвет и случайное положение."""
         super().__init__(body_color=body_color)
-        self.occupied_positions = (
-            occupied_positions if occupied_positions is not None else []
-        )
+        self.occupied_positions = occupied_positions
         self.randomize_position()
 
     def randomize_position(self) -> None:
@@ -92,10 +91,10 @@ class Snake(GameObject):
         """
         super().__init__(body_color=body_color)
         self.length: int = 1
-        self.positions = [self.position]
-        self.direction: tuple[int, int] = choice([UP, DOWN, LEFT, RIGHT])
-        self.next_direction: tuple[int, int] | None = None
-        self.last: tuple[int, int] | None = None
+        self.positions: List[POINTER] = [self.position]
+        self.direction: POINTER = choice([UP, DOWN, LEFT, RIGHT])
+        self.next_direction: Optional[POINTER] = None
+        self.last: Optional[POINTER] = None
 
     def move(self) -> None:
         """
@@ -143,11 +142,11 @@ class Snake(GameObject):
             last_rect = pg.Rect(self.last, (GRID_SIZE, GRID_SIZE))
             pg.draw.rect(screen, BOARD_BACKGROUND_COLOR, last_rect)
 
-    def get_head_position(self):
+    def get_head_position(self) -> POINTER:
         """Возвращает голову змеи."""
         return self.positions[0]
 
-    def reset(self):
+    def reset(self) -> None:
         """Сбрасывает змейку в начальное состояние."""
         self.length = 1
         self.positions = [SCREEN_CENTER]
@@ -192,12 +191,13 @@ def handle_keys(snake: Snake, speed: int) -> int:
 def draw_info(snake: Snake, speed: int, record_length: int) -> None:
     """Отрисовывает информацию о скорости и рекордной длине."""
     font = pg.font.Font(None, 36)
-    speed_text = font.render(f'Скорость: {speed}', True, (255, 255, 255))
-    record_text = font.render(
-        f'Рекорд: {record_length}', True, (255, 255, 255)
-    )
-    screen.blit(speed_text, (10, 10))
-    screen.blit(record_text, (10, 50))
+    if font:
+        speed_text = font.render(f'Скорость: {speed}', True, (255, 255, 255))
+        record_text = font.render(
+            f'Рекорд: {record_length}', True, (255, 255, 255)
+        )
+        screen.blit(speed_text, (10, 10))
+        screen.blit(record_text, (10, 50))
 
 
 def main() -> None:
