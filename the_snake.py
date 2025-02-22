@@ -46,7 +46,7 @@ class GameObject:
 
     def draw(self):
         """Абстрактный метод отрисовки объекта."""
-        raise NotImplementedError("Subclasses should implement this method")
+        raise NotImplementedError('Subclasses should implement this method')
 
 
 class Apple(GameObject):
