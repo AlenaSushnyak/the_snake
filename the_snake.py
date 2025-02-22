@@ -55,10 +55,14 @@ class Apple(GameObject):
     игровом поле и имеет красный цвет.
     """
 
-    def __init__(self, occupied_positions: List[POINTER] = None, body_color: COLOR = APPLE_COLOR) -> None:
+    def __init__(self, 
+             occupied_positions: List[POINTER] = None, 
+             body_color: COLOR = APPLE_COLOR) -> None:
         """Инициализирует яблоко: задаёт цвет и случайное положение."""
         super().__init__(body_color=body_color)
-        self.occupied_positions = occupied_positions if occupied_positions is not None else []
+        self.occupied_positions = (
+            occupied_positions if occupied_positions is not None else []
+        )
         self.randomize_position()
 
     def randomize_position(self) -> None:
@@ -230,7 +234,6 @@ def main() -> None:
             snake.reset()
             apple.randomize_position()
 
-        # Отрисовка объектов
         screen.fill(BOARD_BACKGROUND_COLOR)
         snake.draw()
         apple.draw()
