@@ -55,9 +55,8 @@ class Apple(GameObject):
     игровом поле и имеет красный цвет.
     """
 
-    def __init__(self, 
-             occupied_positions: List[POINTER] = None, 
-             body_color: COLOR = APPLE_COLOR) -> None:
+    def __init__(self, occupied_positions: List[POINTER] = None,
+            body_color: COLOR = APPLE_COLOR) -> None:
         """Инициализирует яблоко: задаёт цвет и случайное положение."""
         super().__init__(body_color=body_color)
         self.occupied_positions = (
