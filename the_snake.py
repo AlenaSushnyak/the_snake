@@ -1,4 +1,5 @@
 from random import choice, randint
+
 import pygame as pg
 
 POINTER = tuple[int, int]
