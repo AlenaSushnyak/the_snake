@@ -12,10 +12,12 @@ GRID_SIZE: int = 20
 GRID_WIDTH: int = SCREEN_WIDTH // GRID_SIZE
 GRID_HEIGHT: int = SCREEN_HEIGHT // GRID_SIZE
 
-UP = (0, -1)
-DOWN = (0, 1)
-LEFT = (-1, 0)
-RIGHT = (1, 0)
+UP: POINTER = (0, -1)
+DOWN: POINTER = (0, 1)
+LEFT: POINTER = (-1, 0)
+RIGHT: POINTER = (1, 0)
+
+ZERO_DIRECTION: POINTER = (0, 0)
 
 BOARD_BACKGROUND_COLOR: COLOR = (0, 0, 0)
 BORDER_COLOR: COLOR = (93, 216, 228)
@@ -30,7 +32,7 @@ MAX_SPEED: int = 20
 screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
 pg.display.set_caption('Змейка')
 clock: pg.time.Clock = pg.time.Clock()
-SCREEN_CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+SCREEN_CENTER: POINTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 
 
 class GameObject:
@@ -41,7 +43,7 @@ class GameObject:
         Инициализирует игровой объект, устанавливая позицию в центре экрана.
         Цвет (body_color) должен быть задан в дочерних классах.
         """
-        self.position = SCREEN_CENTER
+        self.position: POINTER = SCREEN_CENTER
         self.body_color: COLOR = body_color
 
     def draw(self):
@@ -55,25 +57,22 @@ class Apple(GameObject):
     игровом поле и имеет красный цвет.
     """
 
-    def __init__(self, occupied_positions: List[POINTER] = None,
+    def __init__(self, occupied_positions: List[POINTER],
                  body_color: COLOR = APPLE_COLOR) -> None:
         """Инициализирует яблоко: задаёт цвет и случайное положение."""
         super().__init__(body_color=body_color)
-        self.occupied_positions = (
-            occupied_positions if occupied_positions is not None else []
-        )
-        self.randomize_position()
+        self.randomize_position(occupied_positions)
 
-    def randomize_position(self) -> None:
+    def randomize_position(self, occupied_positions: List[POINTER]) -> None:
         """Устанавливает случайное положение яблока
         в пределах игрового поля.
         """
         while True:
-            new_position = (
+            new_position: POINTER = (
                 randint(0, GRID_WIDTH - 1) * GRID_SIZE,
                 randint(0, GRID_HEIGHT - 1) * GRID_SIZE
             )
-            if new_position not in self.occupied_positions:
+            if new_position not in occupied_positions:
                 self.position = new_position
                 break
 
@@ -111,7 +110,7 @@ class Snake(GameObject):
         x, y = self.get_head_position()
         dx, dy = self.direction
 
-        new_head = (
+        new_head: POINTER = (
             (x + dx * GRID_SIZE + SCREEN_WIDTH) % SCREEN_WIDTH,
             (y + dy * GRID_SIZE + SCREEN_HEIGHT) % SCREEN_HEIGHT
         )
@@ -136,7 +135,7 @@ class Snake(GameObject):
             pg.draw.rect(screen, self.body_color, rect)
             pg.draw.rect(screen, BORDER_COLOR, rect, 1)
 
-        head_rect = pg.Rect(self.positions[0], (GRID_SIZE, GRID_SIZE))
+        head_rect = pg.Rect(self.get_head_position(), (GRID_SIZE, GRID_SIZE))
         pg.draw.rect(screen, self.body_color, head_rect)
         pg.draw.rect(screen, BORDER_COLOR, head_rect, 1)
 
@@ -156,6 +155,14 @@ class Snake(GameObject):
         self.next_direction = None
 
 
+DIRECTION_KEYS = {
+    pg.K_UP: UP,
+    pg.K_DOWN: DOWN,
+    pg.K_LEFT: LEFT,
+    pg.K_RIGHT: RIGHT,
+}
+
+
 def handle_keys(snake: Snake, speed: int) -> int:
     """Обрабатывает события клавиатуры для изменения
     направления движения змейки.
@@ -169,18 +176,13 @@ def handle_keys(snake: Snake, speed: int) -> int:
 
         if event.type == pg.KEYDOWN:
 
-            direction_keys = {
-                pg.K_UP: UP,
-                pg.K_DOWN: DOWN,
-                pg.K_LEFT: LEFT,
-                pg.K_RIGHT: RIGHT,
-            }
-
-            if event.key in direction_keys:
-                new_direction = direction_keys[event.key]
-                if (new_direction[0] + snake.direction[0], new_direction[
-                        1] + snake.direction[1]) != (0, 0):
-                    snake.next_direction = new_direction
+            if event.key in DIRECTION_KEYS:
+                new_dx, new_dy = DIRECTION_KEYS[event.key]
+                current_dx, current_dy = snake.direction
+                if (
+                    new_dx + current_dx, new_dy + current_dy
+                ) != ZERO_DIRECTION:
+                    snake.next_direction = (new_dx, new_dy)
 
             if event.key in (pg.K_PLUS, pg.K_EQUALS):
                 speed = min(speed + 1, MAX_SPEED)
@@ -224,14 +226,14 @@ def main() -> None:
 
         if snake.get_head_position() == apple.position:
             snake.length += 1
-            apple.randomize_position()
+            apple.randomize_position(snake.positions)
 
             if snake.length > record_length:
                 record_length = snake.length
 
         if snake.get_head_position() in snake.positions[1:]:
             snake.reset()
-            apple.randomize_position()
+            apple.randomize_position(snake.positions)
 
         screen.fill(BOARD_BACKGROUND_COLOR)
         snake.draw()
